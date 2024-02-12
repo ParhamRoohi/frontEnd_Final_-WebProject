@@ -7,6 +7,10 @@ const router = createBrowserRouter([
     path: "/",
     element: <HomePage />
   },
+  {
+    path: "/product",
+    element: <ProductPage />
+  }
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")).render(
