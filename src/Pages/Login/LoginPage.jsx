@@ -9,7 +9,11 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
+import { useNavigate } from 'react-router-dom';
 import { Link } from "react-router-dom";
+import { post } from "../../utils/httpClient";
+import { useState } from "react";
+import axios from "axios";
 
 export default function InputAdornments() {
   <link
@@ -18,12 +22,65 @@ export default function InputAdornments() {
   />;
 
   const [showPassword, setShowPassword] = React.useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
 
   const handleMouseDownPassword = (event) => {
     event.preventDefault();
   };
+  
+
+  // const handleSend = async () => {
+  //   try {
+  //     const data = await post("/LoginPage",{username, password});
+  //     JSON.stringify(data);
+  //     console.log(data);
+  //     if (!data.error) {
+  //       console.log(error);
+  //       console.log("Login", data);
+  //     }
+  //   } catch (error) {
+  //     console.log(error);
+  //     console.log("wrong pass");
+  //   }
+  // };
+
+
+
+  // const handleSend = async () => {
+  //   try {
+  //     const { data } = await post("/LoginPage", { username, password });
+  //     console.log(data);
+  //     if (!data.error) { // Check for the correct property
+  //       console.log("Login", data);
+  //       // Handle successful login here
+  //     } else {
+  //       console.log("Login failed:", data.message);
+  //       // Handle login failure here
+  //     }
+  //   } catch (error) {
+  //     console.log("Error during login:", error);
+  //   }
+  // };
+  
+  const handleSend = async () => {
+    try {
+      const { data } = await axios.post("http://localhost:3000/LoginPage", { username, password });
+      if (data.error) { 
+        console.log("Login failed:", data.message);
+      } else {
+        // console.log("Login :", data.message);
+        localStorage.setItem('userAuth', JSON.stringify(data.user));
+        navigate("/");
+      }
+    } catch (error) {
+      console.log("Error during login:", error);
+    }
+  };
+  
 
   return (
     <Box
@@ -35,6 +92,12 @@ export default function InputAdornments() {
       }}
     >
       <div>
+        <TextField
+          helperText=" "
+          id="demo-helper-text-aligned-no-helper"
+          label="Userame"
+          onChange={(e) => setUsername(e.target.value)}
+        />
         <FormControl sx={{ m: 1 }} variant="outlined">
           <InputLabel htmlFor="outlined-adornment-password">
             Password
@@ -42,6 +105,7 @@ export default function InputAdornments() {
           <OutlinedInput
             id="outlined-adornment-password"
             type={showPassword ? "text" : "password"}
+            onChange={(e) => setPassword(e.target.value)}
             endAdornment={
               <InputAdornment position="end">
                 <IconButton
@@ -57,18 +121,9 @@ export default function InputAdornments() {
             label="Password"
           />
         </FormControl>
-        <br />
-        <TextField
-          id="outlined-controlled"
-          label="UserName"
-          value={name}
-          onChange={(event) => {
-            setName(event.target.value);
-          }}
-        />
-        <br />
-        <br />
-        <Link to="/"><Button variant="contained">Login</Button></Link>
+        <Button variant="contained" onClick={handleSend}>
+          Login
+        </Button>
       </div>
     </Box>
   );

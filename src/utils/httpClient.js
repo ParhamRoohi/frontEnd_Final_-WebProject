@@ -13,3 +13,27 @@ export function get(path) {
 
   return axios.get(`${BASE_URL}${path}`, requestOptions);
 }
+export function post(path, body) {
+  var myHeaders = new Headers();
+  myHeaders.append("Content-Type", "application/json");
+  var raw = JSON.stringify(body);
+  var requestOptions = {
+    method: "POST",
+    body: raw,
+    headers: myHeaders,
+    redirect: "follow",
+  };
+  return axios.post(`${BASE_URL}${path}`, requestOptions);
+}
+export function put(path, body) {
+  var myHeaders = new Headers();
+  myHeaders.append("Content-Type", "application/json");
+  var raw = JSON.stringify(body);
+
+  var requestOptions = {
+    method: "PUT",
+    headers: myHeaders,
+    redirect: "follow",
+  };
+  return axios.put(`${BASE_URL}${path}`, requestOptions);
+}
