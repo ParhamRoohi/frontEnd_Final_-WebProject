@@ -38,6 +38,7 @@ useEffect (() => {
     navigate("/")
   }
 }, []);
+
   // const handleSend = async () => {
   //   try {
   //     const data = await post("/LoginPage",{username, password});
