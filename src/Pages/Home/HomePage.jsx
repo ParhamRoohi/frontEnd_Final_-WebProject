@@ -32,12 +32,13 @@ import DialogTitle from "@mui/material/DialogTitle";
 import TextField from "@mui/material/TextField";
 import Tooltip from "@mui/material/Tooltip";
 import InputLabel from "@mui/material/InputLabel";
+import Stack from '@mui/material/Stack';
 // import DialogContentText from "@mui/material/DialogContentText";
 // import Badge from "@mui/material/Badge";
 // import MailIcon from "@mui/icons-material/Mail";
 // import NotificationsIcon from "@mui/icons-material/Notifications";
 // import MoreIcon from "@mui/icons-material/MoreVert";
-// import CardMedia from '@mui/material/CardMedia';
+import CardMedia from '@mui/material/CardMedia';
 
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
@@ -143,6 +144,7 @@ export default function HomePage() {
     amount: "",
     storage: "",
     price: "",
+    product_image:""
   });
   //_______________________________
 
@@ -190,6 +192,7 @@ export default function HomePage() {
         amount: "",
         storage: "",
         price: "",
+        product_image:""
       });
       loadProducts(res);
       handleCloseAddDialog();
@@ -267,6 +270,10 @@ export default function HomePage() {
     setFilteredProducts(sortedProducts);
   };
 
+  const logout = () => {
+    localStorage.setItem("userAuth", null);
+  }
+
   return (
     <div>
       <Box sx={{ flexGrow: 1 }}>
@@ -298,6 +305,7 @@ export default function HomePage() {
               <IconButton onClick={handleSortByPrice}>
                 <ArrowDownwardIcon />
               </IconButton>
+
             </Tooltip>
 
             {isAdmin && (
@@ -307,13 +315,16 @@ export default function HomePage() {
                 </IconButton>
               </Tooltip>
             )}
+            <Button onClick={logout} variant="contained">Log Out</Button>
           </Toolbar>
         </AppBar>
       </Box>
       <Card sx={{ display: "flex", flexDirection: "column" }}>
         {filteredProducts?.map((t) => (
           <CardActionArea key={t.id} sx={{ margin: "2px", padding: "2px" }}>
+            <CardMedia component='img' height='180' image={t.product_image} alt='phone image' ></CardMedia>
             <CardContent sx={{ backgroundColor: "red" }}>
+            
               <Typography variant="body2" color="text.secondary">
                 {t.brand}
               </Typography>
@@ -329,6 +340,7 @@ export default function HomePage() {
               <Typography variant="body2" color="text.secondary">
                 {t.price}
               </Typography>
+              
               <Button
                 onClick={() => handleOpenModal(t.description, t.price, t.id)}
               >

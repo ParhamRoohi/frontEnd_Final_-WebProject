@@ -12,7 +12,7 @@ import Button from "@mui/material/Button";
 import { useNavigate } from 'react-router-dom';
 import { Link } from "react-router-dom";
 import { post } from "../../utils/httpClient";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 
 export default function InputAdornments() {
@@ -32,7 +32,12 @@ export default function InputAdornments() {
     event.preventDefault();
   };
   
-
+useEffect (() => {
+  const userAuth = JSON.parse(localStorage.getItem('userAuth'));
+  if(userAuth && userAuth.id){
+    navigate("/")
+  }
+}, []);
   // const handleSend = async () => {
   //   try {
   //     const data = await post("/LoginPage",{username, password});
