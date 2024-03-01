@@ -9,9 +9,15 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
-import { useNavigate } from 'react-router-dom';
+import Dialog from "@mui/material/Dialog";
+import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
-import { post } from "../../utils/httpClient";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+// import Alert from "@mui/material/Alert";
+// import AlertTitle from "@mui/material/AlertTitle";
+// import { post } from "../../utils/httpClient";
 import { useEffect, useState } from "react";
 import axios from "axios";
 
@@ -24,6 +30,23 @@ export default function InputAdornments() {
   const [showPassword, setShowPassword] = React.useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [openDialog, setOpenDialog] = React.useState(false);
+  const [openAlert, setOpenAlert] = React.useState(false);
+
+  const handleOpenAlert = () => {
+    setOpenAlert(true);
+  };
+  // const handleCloseAlert = () => {
+  //   setOpenAlert(false);
+  // };
+
+  const handleOpenAddDialog = () => {
+    setOpenDialog(true);
+  };
+  const handleCloseAddDialog = () => {
+    setOpenDialog(false);
+  };
+
   const navigate = useNavigate();
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
@@ -31,13 +54,23 @@ export default function InputAdornments() {
   const handleMouseDownPassword = (event) => {
     event.preventDefault();
   };
-  
-useEffect (() => {
-  const userAuth = JSON.parse(localStorage.getItem('userAuth'));
-  if(userAuth && userAuth.id){
-    navigate("/")
-  }
-}, []);
+
+  const [newUserData, setNewUserData] = useState({
+    username: "",
+    password: "",
+  });
+
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+    setNewUserData({ ...newUserData, [name]: value });
+  };
+
+  useEffect(() => {
+    const userAuth = JSON.parse(localStorage.getItem("userAuth"));
+    if (userAuth && userAuth.id) {
+      navigate("/");
+    }
+  }, []);
 
   // const handleSend = async () => {
   //   try {
@@ -54,8 +87,6 @@ useEffect (() => {
   //   }
   // };
 
-
-
   // const handleSend = async () => {
   //   try {
   //     const { data } = await post("/LoginPage", { username, password });
@@ -71,22 +102,38 @@ useEffect (() => {
   //     console.log("Error during login:", error);
   //   }
   // };
-  
+
   const handleSend = async () => {
     try {
-      const { data } = await axios.post("http://localhost:3000/LoginPage", { username, password });
-      if (data.error) { 
+      const { data } = await axios.post("http://localhost:3000/users", {
+        username,
+        password,
+      });
+      if (data.error) {
         console.log("Login failed:", data.message);
       } else {
-        // console.log("Login :", data.message);
-        localStorage.setItem('userAuth', JSON.stringify(data.user));
+        localStorage.setItem("userAuth", JSON.stringify(data.user));
         navigate("/");
       }
     } catch (error) {
       console.log("Error during login:", error);
     }
   };
-  
+  const handleSignUp = async () => {
+    try {
+      const { username, password } = newUserData;
+      const { data } = await axios.post("http://localhost:3000/users", {
+        username,
+        password,
+      });
+      handleCloseAddDialog();
+      if (data.error) {
+        console.log("Sign Up failed:");
+      }
+    } catch (error) {
+      console.log("This account exiest", error);
+    }
+  };
 
   return (
     <Box
@@ -130,6 +177,50 @@ useEffect (() => {
         <Button variant="contained" onClick={handleSend}>
           Login
         </Button>
+        <div>
+          Do you have account?<Link onClick={handleOpenAddDialog}>Sign Up</Link>
+        </div>
+
+        <Dialog
+          open={openDialog}
+          onClose={handleCloseAddDialog}
+          PaperProps={{
+            component: "form",
+            onSubmit: (event) => {
+              event.preventDefault();
+            },
+          }}
+        >
+          <DialogTitle sx={{ textAlign: "center", fontFamily: "bold" }}>
+            SIGN UP
+          </DialogTitle>
+          <br />
+          <DialogContent>
+            <TextField
+              label="Username"
+              name="username"
+              value={newUserData.username}
+              onChange={handleInputChange}
+            />
+            <br />
+            <br />
+            <TextField
+              label="Password"
+              name="password"
+              type="password"
+              value={newUserData.password}
+              onChange={handleInputChange}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button type="submit" onClick={handleCloseAddDialog}>
+              Cancel
+            </Button>
+            <Button type="submit" onClick={handleSignUp}>
+              Sign Up
+            </Button>
+          </DialogActions>
+        </Dialog>
       </div>
     </Box>
   );

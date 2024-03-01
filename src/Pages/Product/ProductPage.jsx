@@ -1,42 +1,233 @@
 import { useEffect, useState } from "react";
 import { get } from "../../utils/httpClient";
-import { useLocation } from "react-router-dom";
-import { Link } from "react-router-dom";
-import axios from "axios";
-import * as React from "react";
+import { useParams } from "react-router-dom";
 import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import Typography from "@mui/material/Typography";
+import Button from "@mui/material/Button";
+import RemoveIcon from "@mui/icons-material/Remove";
+import * as React from "react";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
+import TextField from "@mui/material/TextField";
+import AddIcon from "@mui/icons-material/Add";
+import IconButton from "@mui/material/IconButton";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
+export default function ProductPage() {
+  const [openDialog, setOpenDialog] = React.useState(false);
+  const [description, setSelectedProductDescription] = React.useState("");
+  const [price, setSelectedProductPrice] = React.useState("");
+  const [selectedProductId, setSelectedProductId] = React.useState([]);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [user, setUser] = useState([]);
+  const [editedAmount, setEditedAmount] = React.useState(0);
+  const [editedPrice, setEditedPrice] = React.useState(0);
+  const [count, setCount] = useState(0);
+  const [amount, setAmount] = React.useState(0);
+  const { id } = useParams();
+  const [products, setProduct] = useState("");
+  const navigate = useNavigate();
 
-export default function SalesPage() {
-//   const [products, setProducts] = useState([]);
-//   const [selectedProductId, getProductID] = useState([]);
-const [product, setProducts] = useState([]); // Initially set to null
-const [selectedProductId, setSelectedProductId] = React.useState([]);
+  const handleOpenDialog = () => {
+    setOpenDialog(true);
+  };
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+  };
 
+  const handleAdd = () => {
+    setCount(count + 1);
+  };
+  const handleRemove = () => {
+    setCount(count - 1);
+    if (count === 0) {
+      setCount(count);
+    }
+  };
 
-// function fetchProductDetails(productId) {
-//     // Replace with your actual product fetching logic
-//     return fetch(`http://localhost:3000/products/${selectedProductId}`)
-//       .then(response => response.json());
-//   }
-  const loadProducts = async () => {
+  const handlePriceChange = (event) => {
+    setEditedPrice(event.target.value);
+  };
+
+  const handleAmountChange = (event) => {
+    setAmount(event.target.value);
+  };
+
+  const loadUser = () => {
+    const userAuthData = localStorage.getItem("userAuth");
+    setUser(userAuthData ? JSON.parse(userAuthData) : null);
+  };
+
+  useEffect(() => {
+    loadProduct();
+    loadUser();
+    const userAuth = JSON.parse(localStorage.getItem("userAuth"));
+    setIsAdmin(userAuth?.isadmin || false);
+  }, [id]);
+
+  const handleBuy = async () => {
+    const newAmount = products[0].amount - count;
     try {
-      const { data } = await axios.get(`http://localhost:3000/products/${selectedProductId}`);
-      setSelectedProductId();
-      setProducts(data);
+      const res = await axios.patch(`http://localhost:3000/products/${id}`, {
+        amount: newAmount,
+      });
+      setCount(0);
+    } catch (error) {
+      console.log("Error editing product:", error);
+    }
+    try {
+      if (!user || !user.id) {
+        console.error("User is not logged in");
+        return;
+      }
+      const res = await axios.post("http://localhost:3000/sales", {
+        user_id: user.id,
+        product_id: id,
+      });
+      if (res.error) {
+        console.error("Error Buying:", response.error);
+      } else {
+        console.log("buy successfully");
+        loadProduct();
+      }
+    } catch (error) {
+      console.error("Error adding buy:", error);
+    }
+  };
+
+  const handleEdit = async () => {
+    try {
+      const res = await axios.put(`http://localhost:3000/products/${id}`, {
+        amount: amount,
+        price: editedPrice,
+      });
+      handleCloseDialog();
+      loadProduct();
+    } catch (error) {
+      console.log("Error editing product:", error);
+    }
+  };
+  const handelDelete = async () => {
+    try {
+      const res = await axios.delete(`http://localhost:3000/products/${id}`);
+      navigate("/");
+      loadProduct();
+    } catch (error) {
+      console.log("Error delete product:", error);
+    }
+  };
+
+  // const handleAmount = async () => {
+  //   const newAmount = products[0].amount - count;
+  //   try {
+  //     const res = await axios.patch(`http://localhost:3000/products/${id}`, {
+  //       amount: newAmount,
+  //     });
+  //     loadProduct();
+  //     setCount(0);
+  //   } catch (error) {
+  //     console.log("Error editing product:", error);
+  //   }
+  // };
+
+  const loadProduct = async () => {
+    try {
+      const res = await get(`/products/${id}`);
+      setAmount(res.data.amount);
+      setProduct(res.data);
     } catch (error) {
       console.log(error);
     }
   };
-  useEffect(() => {
-    loadProducts();
-  }, []);
 
-    
-  return <div>{product && <Card product={product} ></Card>}
-  <Link to = "/">HomePage</Link></div>;
-// return(
-//     <div></div>
-// );
+  if (!products) {
+    return <div>Loading...</div>;
+  }
 
- };
+  return (
+    <Card>
+      <CardContent>
+        <Typography color="textSecondary" gutterBottom>
+          Brand: {products[0]?.brand}
+        </Typography>
+        <Typography variant="body2" component="h2">
+          Name: {products[0]?.name}
+        </Typography>
+        <Typography variant="body2" component="h2">
+          Amount: {products[0]?.amount}
+        </Typography>
+        <Typography variant="body2" component="h2">
+          Storage: {products[0]?.storage}
+        </Typography>
+        <Typography variant="body2" component="p">
+          Description: {products[0]?.description}
+        </Typography>
+        <Typography variant="body2" component="p">
+          Price: {products[0]?.price}
+        </Typography>
+      </CardContent>
+      {isAdmin && <Button onClick={handleOpenDialog}>Edit</Button>}
+      {isAdmin && <Button onClick={handelDelete}>delete</Button>}
+      <IconButton sx={{ display: "flex", right: 0, alignItems: "flex-end" }}>
+        <AddIcon onClick={handleAdd} />
+      </IconButton>
+      <IconButton>
+        <RemoveIcon onClick={handleRemove} />
+      </IconButton>
+      {user && (
+        <Button on onClick={handleBuy}>
+          Buy
+        </Button>
+      )}
+
+      {count}
+      <Dialog
+        open={openDialog}
+        onClose={handleCloseDialog}
+        PaperProps={{
+          component: "form",
+          onSubmit: (event) => {
+            event.preventDefault();
+            handleCloseDialog();
+          },
+        }}
+      >
+        <DialogTitle>Edit Products</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            required
+            margin="dense"
+            id="amount"
+            name="amount"
+            label="amount"
+            type="text"
+            fullWidth
+            variant="standard"
+            onChange={handleAmountChange}
+          />
+          <TextField
+            autoFocus
+            required
+            margin="dense"
+            id="price"
+            name="price"
+            label="price"
+            type="text"
+            fullWidth
+            variant="standard"
+            onChange={handlePriceChange}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog}>Cancel</Button>
+          <Button onClick={handleEdit}>Submit</Button>
+        </DialogActions>
+      </Dialog>
+    </Card>
+  );
+}

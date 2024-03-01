@@ -2,10 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import "./HomePage.css";
 import { get } from "../../utils/httpClient";
-// import { put } from "../../utils/httpClient";
-// import { post } from "../../utils/httpClient";
 import axios from "axios";
-//--------------
 import * as React from "react";
 import { styled, alpha } from "@mui/material/styles";
 import AppBar from "@mui/material/AppBar";
@@ -15,7 +12,6 @@ import Typography from "@mui/material/Typography";
 import InputBase from "@mui/material/InputBase";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
-import Modal from "@mui/material/Modal";
 import CardContent from "@mui/material/CardContent";
 import SearchIcon from "@mui/icons-material/Search";
 import AccountCircle from "@mui/icons-material/AccountCircle";
@@ -32,13 +28,9 @@ import DialogTitle from "@mui/material/DialogTitle";
 import TextField from "@mui/material/TextField";
 import Tooltip from "@mui/material/Tooltip";
 import InputLabel from "@mui/material/InputLabel";
-import Stack from "@mui/material/Stack";
-// import DialogContentText from "@mui/material/DialogContentText";
-// import Badge from "@mui/material/Badge";
-// import MailIcon from "@mui/icons-material/Mail";
-// import NotificationsIcon from "@mui/icons-material/Notifications";
-// import MoreIcon from "@mui/icons-material/MoreVert";
+import { useNavigate } from "react-router-dom";
 import CardMedia from "@mui/material/CardMedia";
+import RemoveIcon from '@mui/icons-material/Remove';
 
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
@@ -99,16 +91,17 @@ export default function HomePage() {
   const [description, setSelectedProductDescription] = React.useState("");
   const [price, setSelectedProductPrice] = React.useState("");
   const [open, setOpenModal] = React.useState(false);
+  const navigate = useNavigate();
+  const [openPage, setOpenPage] = React.useState("");
   const handleCloseModal = () => setOpenModal(false);
   const [selectedProductId, setSelectedProductId] = React.useState([]);
   const [editedAmount, setEditedAmount] = React.useState("");
   const [editedPrice, setEditedPrice] = React.useState("");
-  const handleOpenModal = (description, price, productId) => {
-    setSelectedProductId(productId);
-    setSelectedProductDescription(description);
-    setSelectedProductPrice(price);
-    setOpenModal(true);
+
+  const hanleOpenPage = (productId) => {
+    navigate(`/productPage/${productId}`);
   };
+
   const [isAdmin, setIsAdmin] = useState(false);
   useEffect(() => {
     loadProducts();
@@ -147,39 +140,6 @@ export default function HomePage() {
     price: "",
     product_image: "",
   });
-  
-  //_______________________________
-
-  //Export some function from httpClient
-  // const handleAddProduct = async () => {
-  //   try {
-  //     await post("/products", newProductData);
-  //     setNewProductData({
-  //       brand: "",
-  //       name: "",
-  //       description: "",
-  //       amount: "",
-  //       storage: "",
-  //       price: "",
-  //     });
-  //     loadProducts();
-  //     handleCloseAddDialog();
-  //   } catch (error) {
-  //     console.log(error);
-  //   }
-  // };
-
-  //---
-
-  // const loadProducts = async () => {
-  //   try {
-  //     const { data } = await axios.get("http://localhost:3000/products");
-  //     setProducts(data);
-  //     setFilteredProducts(data);
-  //   } catch (error) {
-  //    console.log(error);
-  //   }
-  // };
 
   const handleAddProduct = async () => {
     try {
@@ -211,36 +171,6 @@ export default function HomePage() {
       console.log(error);
     }
   };
-
-  const handleEdit = async () => {
-    try {
-      const res = await axios.put(
-        `http://localhost:3000/products/${selectedProductId}`,
-        {
-          amount: editedAmount,
-          price: editedPrice,
-        }
-      );
-      handleCloseDialog();
-      handleCloseModal();
-      loadProducts();
-    } catch (error) {
-      console.log("Error editing product:", error);
-    }
-  };
-  const handelDelete = async () => {
-    try {
-      const res = await axios.delete(
-        `http://localhost:3000/products/${selectedProductId}`
-      );
-      handleCloseDialog();
-      handleCloseModal();
-      loadProducts();
-    } catch (error) {
-      console.log("Error delete product:", error);
-    }
-  };
-
   const handleInputChange = (event) => {
     const { name, value } = event.target;
     setNewProductData({ ...newProductData, [name]: value });
@@ -276,11 +206,24 @@ export default function HomePage() {
     localStorage.setItem("userAuth", null);
   };
 
+  const StyledInputBase = styled(InputBase)(({ theme }) => ({
+    color: "inherit",
+    "& .MuiInputBase-input": {
+      padding: theme.spacing(1, 1, 1, 0),
+      paddingLeft: `calc(1em + ${theme.spacing(4)})`,
+      transition: theme.transitions.create("width"),
+      width: "100%",
+      [theme.breakpoints.up("md")]: {
+        width: "20ch",
+      },
+    },
+  }));
+
   return (
     <div>
       <Box sx={{ flexGrow: 1 }}>
-        <AppBar position="static">
-          <Toolbar>
+        <AppBar position="fixed">
+          <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
             <Link to="/LoginPage">
               <IconButton
                 size="large"
@@ -322,128 +265,59 @@ export default function HomePage() {
           </Toolbar>
         </AppBar>
       </Box>
-      <Card sx={{ display: "flex", flexDirection: "column" }}>
-        {filteredProducts?.map((t) => (
-          <CardActionArea key={t.id} sx={{ margin: "2px", padding: "2px" }}>
-            <CardMedia
-              component="img"
-              height="180"
-              image={t.product_image}
-              alt="phone image"
-            ></CardMedia>
-            <CardContent sx={{ backgroundColor: "red" }}>
-              <Typography variant="body2" color="text.secondary">
-                {t.brand}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {t.name}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {t.amount}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {t.storage}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {t.price}
-              </Typography>
-              <div
-                onClick={() => handleOpenModal(t.description, t.price, t.id)}
-              >
-                show Details
-              </div>
-              <Modal
-                aria-labelledby="transition-modal-title"
-                aria-describedby="transition-modal-description"
-                open={open}
-                closeAfterTransition
-                slots={{ backdrop: Backdrop }}
-                slotProps={{
-                  backdrop: { timeout: 500 },
-                }}
-              >
-                <Fade in={open}>
-                  <Box sx={style}>
-                    <Typography
-                      id="transition-modal-title"
-                      variant="body1"
-                      component="p"
-                    >
-                      Product ID : {selectedProductId}
-                      <br />
-                      Description : {description}
-                      <br />
-                      Price : {price}
-                    </Typography>
-                    <Button onClick={handleCloseModal}>Cancel</Button>
-                    {isAdmin && (
-                      <Button onClick={handleOpenDialog}>Edit</Button>
-                    )}
-                    {isAdmin && <Button onClick={handelDelete}>delete</Button>}
-                    {/* <Link to = "/salePage"><Button onClick={selectedProductId}>Buy</Button></Link> */}
-                    <Button
-                      onClick={() => {
-                        navigate(`/productPage/${selectedProductId}`);
-                      }}
-                    >
-                      Buy
-                    </Button>
-                    <Dialog
-                      open={openDialog}
-                      onClose={handleCloseDialog}
-                      PaperProps={{
-                        component: "form",
-                        onSubmit: (event) => {
-                          event.preventDefault();
-                          const formData = new FormData(event.currentTarget);
-                          const formJson = Object.fromEntries(
-                            formData.entries()
-                          );
-                          const email = formJson.email;
-                          console.log(email);
-                          handleCloseDialog();
-                        },
-                      }}
-                    >
-                      <DialogTitle>Edit Products</DialogTitle>
-                      <DialogContent>
-                        <TextField
-                          autoFocus
-                          required
-                          margin="dense"
-                          id="amount"
-                          name="amount"
-                          label="amount"
-                          type="text"
-                          fullWidth
-                          variant="standard"
-                          onChange={handleAmountChange}
-                        />
-                        <TextField
-                          autoFocus
-                          required
-                          margin="dense"
-                          id="price"
-                          name="price"
-                          label="price"
-                          type="text"
-                          fullWidth
-                          variant="standard"
-                          onChange={handlePriceChange}
-                        />
-                      </DialogContent>
-                      <DialogActions>
-                        <Button onClick={handleCloseDialog}>Cancel</Button>
-                        <Button onClick={handleEdit}>Submit</Button>
-                      </DialogActions>
-                    </Dialog>
-                  </Box>
-                </Fade>
-              </Modal>
-            </CardContent>
-          </CardActionArea>
-        ))}
-      </Card>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          textAlign: "center",
+          marginTop: "80px",
+        }}
+      >
+        <Card sx={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+          {filteredProducts?.map((t) => (
+            <CardActionArea
+              key={t.id}
+              sx={{
+                display: "flex",
+                flexDirection: "colunm",
+                margin: "10px",
+                padding: "10px",
+                height: "20%",
+                width: "20%",
+              }}
+            >
+              <CardMedia
+                component="img"
+                height="180"
+                image={t.product_image}
+                alt="phone image"
+              ></CardMedia>
+              <CardContent>
+                <Typography variant="body2" color="text.secondary">
+                  {t.brand}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {t.name}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {t.amount}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {t.storage}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {t.price}
+                </Typography>
+                <div
+                  onClick={() => hanleOpenPage(t.id)}
+                >
+                  Show Details
+                </div>
+              </CardContent>
+            </CardActionArea>
+          ))}
+        </Card>
+      </Box>
       <Dialog
         open={openAddDialog}
         onClose={handleCloseAddDialog}
@@ -451,10 +325,6 @@ export default function HomePage() {
           component: "form",
           onSubmit: (event) => {
             event.preventDefault();
-            const formData = new FormData(event.currentTarget);
-            const formJson = Object.fromEntries(formData.entries());
-            const email = formJson.email;
-            console.log(email);
             handleCloseDialog();
           },
         }}
@@ -507,6 +377,14 @@ export default function HomePage() {
           <TextField
             name="price"
             value={newProductData.price}
+            onChange={handleInputChange}
+          />
+          <InputLabel size="normal" focused>
+            Photo URL:
+          </InputLabel>
+          <TextField
+            name="photoURL"
+            value={newProductData.product_image}
             onChange={handleInputChange}
           />
         </DialogContent>

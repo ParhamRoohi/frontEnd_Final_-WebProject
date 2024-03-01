@@ -1,6 +1,6 @@
 import axios from "axios";
-
-const BASE_URL = "http://localhost:3000";
+const BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL;
+// const BASE_URL = "http://localhost:3000";
 export function get(path) {
   var myHeaders = new Headers();
   myHeaders.append("Content-Type", "application/json");
@@ -25,15 +25,4 @@ export function post(path, body) {
   };
   return axios.post(`${BASE_URL}${path}`, requestOptions);
 }
-export function put(path, body) {
-  var myHeaders = new Headers();
-  myHeaders.append("Content-Type", "application/json");
-  var raw = JSON.stringify(body);
 
-  var requestOptions = {
-    method: "PUT",
-    headers: myHeaders,
-    redirect: "follow",
-  };
-  return axios.put(`${BASE_URL}${path}`, requestOptions);
-}
