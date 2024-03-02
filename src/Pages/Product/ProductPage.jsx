@@ -19,12 +19,8 @@ import { useNavigate } from "react-router-dom";
 
 export default function ProductPage() {
   const [openDialog, setOpenDialog] = React.useState(false);
-  const [description, setSelectedProductDescription] = React.useState("");
-  const [price, setSelectedProductPrice] = React.useState("");
-  const [selectedProductId, setSelectedProductId] = React.useState([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [user, setUser] = useState([]);
-  const [editedAmount, setEditedAmount] = React.useState(0);
   const [editedPrice, setEditedPrice] = React.useState(0);
   const [count, setCount] = useState(0);
   const [amount, setAmount] = React.useState(0);
@@ -58,44 +54,50 @@ export default function ProductPage() {
   };
 
   const loadUser = () => {
-    const userAuthData = localStorage.getItem("userAuth");
-    setUser(userAuthData ? JSON.parse(userAuthData) : null);
+    try {
+      const userAuthData = localStorage.getItem("userAuth");
+      setUser(userAuthData ? JSON.parse(userAuthData) : null);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   useEffect(() => {
     loadProduct();
     loadUser();
     const userAuth = JSON.parse(localStorage.getItem("userAuth"));
-    setIsAdmin(userAuth?.isadmin || false);
+    setIsAdmin(userAuth?.is_admin || false);
   }, [id]);
 
   const handleBuy = async () => {
-    const newAmount = products[0].amount - count;
-    try {
-      const res = await axios.patch(`http://localhost:3000/products/${id}`, {
-        amount: newAmount,
-      });
-      setCount(0);
-    } catch (error) {
-      console.log("Error editing product:", error);
-    }
-    try {
-      if (!user || !user.id) {
-        console.error("User is not logged in");
-        return;
+    if (count !== 0) {
+      const newAmount = products[0].amount - count;
+      try {
+        const res = await axios.patch(`http://localhost:3000/products/${id}`, {
+          amount: newAmount,
+        });
+        setCount(0);
+      } catch (error) {
+        console.log("Error editing product:", error);
       }
-      const res = await axios.post("http://localhost:3000/sales", {
-        user_id: user.id,
-        product_id: id,
-      });
-      if (res.error) {
-        console.error("Error Buying:", response.error);
-      } else {
-        console.log("buy successfully");
-        loadProduct();
+      try {
+        if (!user || !user.id) {
+          console.error("User is not logged in");
+          return;
+        }
+        const res = await axios.post("http://localhost:3000/sales", {
+          user_id: user.id,
+          product_id: id,
+        });
+        if (res.error) {
+          console.error("Error Buying:", response.error);
+        } else {
+          console.log("buy successfully");
+          loadProduct();
+        }
+      } catch (error) {
+        console.error("Error adding buy:", error);
       }
-    } catch (error) {
-      console.error("Error adding buy:", error);
     }
   };
 
@@ -121,19 +123,6 @@ export default function ProductPage() {
     }
   };
 
-  // const handleAmount = async () => {
-  //   const newAmount = products[0].amount - count;
-  //   try {
-  //     const res = await axios.patch(`http://localhost:3000/products/${id}`, {
-  //       amount: newAmount,
-  //     });
-  //     loadProduct();
-  //     setCount(0);
-  //   } catch (error) {
-  //     console.log("Error editing product:", error);
-  //   }
-  // };
-
   const loadProduct = async () => {
     try {
       const res = await get(`/products/${id}`);
@@ -151,15 +140,17 @@ export default function ProductPage() {
   return (
     <Card>
       <CardContent>
-        <Typography color="textSecondary" gutterBottom>
+        <Typography color="textSecondary" variant="h6" gutterBottom>
           Brand: {products[0]?.brand}
         </Typography>
         <Typography variant="body2" component="h2">
           Name: {products[0]?.name}
         </Typography>
-        <Typography variant="body2" component="h2">
-          Amount: {products[0]?.amount}
-        </Typography>
+        {isAdmin && (
+          <Typography variant="body2" component="h2">
+            Amount: {products[0]?.amount}
+          </Typography>
+        )}
         <Typography variant="body2" component="h2">
           Storage: {products[0]?.storage}
         </Typography>
@@ -172,19 +163,26 @@ export default function ProductPage() {
       </CardContent>
       {isAdmin && <Button onClick={handleOpenDialog}>Edit</Button>}
       {isAdmin && <Button onClick={handelDelete}>delete</Button>}
-      <IconButton sx={{ display: "flex", right: 0, alignItems: "flex-end" }}>
-        <AddIcon onClick={handleAdd} />
-      </IconButton>
-      <IconButton>
-        <RemoveIcon onClick={handleRemove} />
-      </IconButton>
-      {user && (
-        <Button on onClick={handleBuy}>
-          Buy
-        </Button>
-      )}
-
-      {count}
+      <div
+        style={{ display: "flex", alignItems: "center", flexdirection: "row" }}
+      >
+        {user && !isAdmin && (
+          <IconButton>
+            <span>
+              <RemoveIcon onClick={handleRemove} />
+            </span>
+          </IconButton>
+        )}
+        {user && !isAdmin && <div>{count}</div>}
+        {user && !isAdmin && (
+          <IconButton>
+            <span>
+              <AddIcon onClick={handleAdd} />
+            </span>
+          </IconButton>
+        )}
+      </div>
+      {user && !isAdmin && <Button onClick={handleBuy}>Buy</Button>}
       <Dialog
         open={openDialog}
         onClose={handleCloseDialog}

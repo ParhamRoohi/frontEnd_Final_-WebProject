@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import "./HomePage.css";
 import { get } from "../../utils/httpClient";
 import axios from "axios";
 import * as React from "react";
@@ -17,8 +16,6 @@ import SearchIcon from "@mui/icons-material/Search";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import { CardActionArea } from "@mui/material";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import Backdrop from "@mui/material/Backdrop";
-import Fade from "@mui/material/Fade";
 import Box from "@mui/material/Box";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
@@ -30,7 +27,6 @@ import Tooltip from "@mui/material/Tooltip";
 import InputLabel from "@mui/material/InputLabel";
 import { useNavigate } from "react-router-dom";
 import CardMedia from "@mui/material/CardMedia";
-import RemoveIcon from '@mui/icons-material/Remove';
 
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
@@ -88,40 +84,21 @@ export default function HomePage() {
   const [searchQuery, setSearch] = useState("");
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [products, setProducts] = useState([]);
-  const [description, setSelectedProductDescription] = React.useState("");
-  const [price, setSelectedProductPrice] = React.useState("");
-  const [open, setOpenModal] = React.useState(false);
   const navigate = useNavigate();
-  const [openPage, setOpenPage] = React.useState("");
-  const handleCloseModal = () => setOpenModal(false);
-  const [selectedProductId, setSelectedProductId] = React.useState([]);
-  const [editedAmount, setEditedAmount] = React.useState("");
-  const [editedPrice, setEditedPrice] = React.useState("");
 
   const hanleOpenPage = (productId) => {
     navigate(`/productPage/${productId}`);
   };
 
   const [isAdmin, setIsAdmin] = useState(false);
+  const userAuth = JSON.parse(localStorage.getItem("userAuth"));
   useEffect(() => {
     loadProducts();
-    const userAuth = JSON.parse(localStorage.getItem("userAuth"));
     setIsAdmin(userAuth?.is_admin || false);
   }, []);
 
-  const handleOpenDialog = () => {
-    setOpenDialog(true);
-  };
-
   const handleCloseDialog = () => {
     setOpenDialog(false);
-  };
-  const handlePriceChange = (event) => {
-    setEditedPrice(event.target.value);
-  };
-
-  const handleAmountChange = (event) => {
-    setEditedAmount(event.target.value);
   };
   const handleOpenaddDialog = () => {
     setOpenAddDialog(true);
@@ -172,8 +149,12 @@ export default function HomePage() {
     }
   };
   const handleInputChange = (event) => {
-    const { name, value } = event.target;
-    setNewProductData({ ...newProductData, [name]: value });
+    try {
+      const { name, value } = event.target;
+      setNewProductData({ ...newProductData, [name]: value });
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const [openAddDialog, setOpenAddDialog] = React.useState(false);
@@ -183,23 +164,31 @@ export default function HomePage() {
   }, []);
 
   const handleSearch = () => {
-    if (searchQuery === "") {
-      setFilteredProducts(products);
-    } else {
-      const filtered = products.filter((product) => {
-        return (
-          product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          product.brand.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-      });
-      setFilteredProducts(filtered);
+    try {
+      if (searchQuery === "") {
+        setFilteredProducts(products);
+      } else {
+        const filtered = products.filter((product) => {
+          return (
+            product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            product.brand.toLowerCase().includes(searchQuery.toLowerCase())
+          );
+        });
+        setFilteredProducts(filtered);
+      }
+    } catch (error) {
+      console.log(error);
     }
   };
 
   const handleSortByPrice = () => {
-    let sortedProducts = [...products];
-    sortedProducts.sort((a, b) => a.price - b.price);
-    setFilteredProducts(sortedProducts);
+    try {
+      let sortedProducts = [...products];
+      sortedProducts.sort((a, b) => a.price - b.price);
+      setFilteredProducts(sortedProducts);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const logout = () => {
@@ -259,9 +248,11 @@ export default function HomePage() {
                 </IconButton>
               </Tooltip>
             )}
-            <Button onClick={logout} variant="contained">
-              Log Out
-            </Button>
+            {userAuth && (
+              <Button onClick={logout} variant="contained">
+                Log Out
+              </Button>
+            )}
           </Toolbar>
         </AppBar>
       </Box>
@@ -270,49 +261,46 @@ export default function HomePage() {
           display: "flex",
           justifyContent: "center",
           textAlign: "center",
-          marginTop: "80px",
+          marginTop: "110px",
         }}
       >
-        <Card sx={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+        <Card
+          sx={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: "10px",
+            height: "100%",
+          }}
+        >
           {filteredProducts?.map((t) => (
             <CardActionArea
               key={t.id}
               sx={{
                 display: "flex",
-                flexDirection: "colunm",
-                margin: "10px",
-                padding: "10px",
-                height: "20%",
-                width: "20%",
+                flexDirection: "column",
+                margin: "15px",
+                padding: "15px",
+                height: "100%",
+                width: "30%",
               }}
             >
               <CardMedia
                 component="img"
-                height="180"
+                height="270"
                 image={t.product_image}
                 alt="phone image"
               ></CardMedia>
               <CardContent>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="h6" color="text.secondary">
                   {t.brand}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   {t.name}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {t.amount}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {t.storage}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
                   {t.price}
                 </Typography>
-                <div
-                  onClick={() => hanleOpenPage(t.id)}
-                >
-                  Show Details
-                </div>
+                <div onClick={() => hanleOpenPage(t.id)}>Show Details</div>
               </CardContent>
             </CardActionArea>
           ))}
@@ -383,7 +371,7 @@ export default function HomePage() {
             Photo URL:
           </InputLabel>
           <TextField
-            name="photoURL"
+            name="product_image"
             value={newProductData.product_image}
             onChange={handleInputChange}
           />
